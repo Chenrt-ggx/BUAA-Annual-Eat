@@ -1,5 +1,11 @@
 # BUAA Annual Eat
 
+> 项目的 IDEA 来源于 [THU-Annual-Eat](https://github.com/leverimmy/THU-Annual-Eat)。
+
+## 项目简介
+
+## 使用方法
+
 ```js
 const query = async () => {
 
