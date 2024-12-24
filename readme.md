@@ -1,6 +1,6 @@
 # BUAA Annual Eat
 
-> 项目的 IDEA 来源于 [THU-Annual-Eat](https://github.com/leverimmy/THU-Annual-Eat)。
+> 本项目的 IDEA 来源于 [THU-Annual-Eat](https://github.com/leverimmy/THU-Annual-Eat)。
 
 ## 项目简介
 
@@ -44,11 +44,11 @@ Step 5，在流水信息查询页点击 <kbd>F12</kbd> 进入开发者工具，�
 
 ![](/step/img-5.jpg)
 
-Step 6，稍等几秒，控制台输出一大段文本，直接点击结尾的复制按钮：
+Step 6，稍等几秒，控制台中会输出一大段文本，直接点击结尾的复制按钮：
 
 ![](/step/img-6.jpg)
 
-Step 7，访问[可视化前端]()页面，粘贴上一步复制的内容，点击解析列表即可。在此基础上，你可以隐藏部分消费地点，和自定义图表标题，Have Fun！
+Step 7，访问[可视化前端](https://chenrt-ggx.github.io/BUAA-Annual-Eat)页面，粘贴上一步复制的内容，点击解析列表即可。在此基础上，你可以隐藏部分消费地点，和自定义图表标题，Have Fun！
 
 ![](/step/img-7.jpg)
 
