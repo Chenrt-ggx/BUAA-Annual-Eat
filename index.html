@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>BUAA Annual Eat 😋</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=1" name="viewport" />
+    <meta name="renderer" content="webkit" />
+    <meta name="format-detection" content="address=no" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="date=no" />
+    <meta name="format-detection" content="time=no" />
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.6/dist/vuetify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+    <link href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxnIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik0xOCAzYTEgMSAwIDAgMSAuOTkzLjg4M0wxOSA0djE2YTEgMSAwIDAgMS0xLjk5My4xMTdMMTcgMjB2LTVoLTFhMSAxIDAgMCAxLS45OTMtLjg4M0wxNSAxNFY4YzAtMi4yMSAxLjUtNSAzLTV6bS02IDBhMSAxIDAgMCAxIC45OTMuODgzTDEzIDR2NWE0LjAwMiA0LjAwMiAwIDAgMS0zIDMuODc0VjIwYTEgMSAwIDAgMS0xLjk5My4xMTdMOCAyMHYtNy4xMjZhNC4wMDIgNC4wMDIgMCAwIDEtMi45OTUtMy42NjhMNSA5VjRhMSAxIDAgMCAxIDEuOTkzLS4xMTdMNyA0djVhMiAyIDAgMCAwIDEgMS43MzJWNGExIDEgMCAwIDEgMS45OTMtLjExN0wxMCA0bC4wMDEgNi43MzJhMiAyIDAgMCAwIC45OTItMS41NjNMMTEgOVY0YTEgMSAwIDAgMSAxLTF6IiBmaWxsPSJjdXJyZW50Q29sb3IiPjwvcGF0aD48L2c+PC9zdmc+" rel="icon" />
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.7.6/dist/vuetify.min.css" rel="stylesheet" />
+    <style>
+      body {
+        background-color: #f5f5f5;
+        font-family: Arial, sans-serif;
+        margin: 10px;
+        padding: 10px;
+      }
+
+      .v-badges {
+        margin: 10px 0;
+      }
+
+      .v-select {
+        margin: 10px 0;
+      }
+
+      .v-text-field {
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <v-app>
+        <v-container>
+          <v-row>
+            <v-col>
+              <v-textarea v-model="inputs" label="原始输入列表" variant="outlined" autofocus no-resize rows="5"></v-textarea>
+              <v-btn @click="updateInputs" color="primary">解析列表</v-btn>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-select v-model="select" label="参与统计地点" variant="outlined" chips multiple :items="places"></v-select>
+              <v-btn @click="updateCharts" color="primary" class="mr-2">筛选地点</v-btn>
+              <v-btn @click="selectCharts" color="primary" class="ml-2">恢复全选</v-btn>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-text-field v-model="pname" label="地点图表名称" variant="outlined" clearable></v-text-field>
+              <v-btn @click="updateCharts" color="primary" class="mr-2">修改名称</v-btn>
+              <v-btn @click="pDefaultName" color="primary" class="ml-2">恢复默认</v-btn>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-text-field v-model="mname" label="月份图表名称" variant="outlined" clearable></v-text-field>
+              <v-btn @click="updateCharts" color="primary" class="mr-2">修改名称</v-btn>
+              <v-btn @click="mDefaultName" color="primary" class="ml-2">恢复默认</v-btn>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <div id="pchart-bar" style="width: 100%; height: 600px; margin-top: 10px; margin-bottom: 45px"></div>
+              <div v-show="places.length" style="color: red">*如出现元素重叠，请尝试缩放页面；右键保存的图片分辨率较低，下载图片请点击右上角！</div>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <div id="pchart-pie" style="width: 100%; height: 600px; margin-top: -8px; margin-bottom: 20px"></div>
+              <div v-show="places.length" style="color: red">*如出现元素重叠，请尝试缩放页面；右键保存的图片分辨率较低，下载图片请点击右上角！</div>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <div id="mchart-bar" style="width: 100%; height: 600px; margin-top: 20px; margin-bottom: 45px"></div>
+              <div v-show="places.length" style="color: red">*如出现元素重叠，请尝试缩放页面；右键保存的图片分辨率较低，下载图片请点击右上角！</div>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <div id="mchart-pie" style="width: 100%; height: 600px; margin-top: -8px; margin-bottom: 20px"></div>
+              <div v-show="places.length" style="color: red">*如出现元素重叠，请尝试缩放页面；右键保存的图片分辨率较低，下载图片请点击右上角！</div>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-app>
+    </div>
+    <script>
+      const { createApp, ref } = Vue;
+      const { onMounted } = Vue;
+      const { onUpdated } = Vue;
+      const { createVuetify } = Vuetify;
+
+      const app = createApp({
+        setup() {
+          const inputs = ref('');
+          const pname = ref('百航校园卡各地点总花费及次数');
+          const mname = ref('百航校园卡各月份总花费及次数');
+          const pdata = ref({});
+          const mdata = ref({});
+
+          const parsed = ref([]);
+          const places = ref([]);
+          const select = ref([]);
+
+          const pbchart = { value: undefined };
+          const mbchart = { value: undefined };
+          const ppchart = { value: undefined };
+          const mpchart = { value: undefined };
+
+          const selectCharts = () => {
+            select.value = places.value; // select all
+            updateCharts();
+          };
+
+          const pDefaultName = () => {
+            pname.value = '百航校园卡各地点总花费及次数';
+            updateCharts();
+          };
+
+          const mDefaultName = () => {
+            mname.value = '百航校园卡各月份总花费及次数';
+            updateCharts();
+          };
+
+          onMounted(() => {
+            pbchart.value = echarts.init(document.getElementById('pchart-bar'));
+            mbchart.value = echarts.init(document.getElementById('mchart-bar'));
+            ppchart.value = echarts.init(document.getElementById('pchart-pie'));
+            mpchart.value = echarts.init(document.getElementById('mchart-pie'));
+          });
+
+          // ------------------------------------------------
+
+          const updateInputs = () => {
+            try {
+              parsed.value = JSON.parse(inputs.value);
+              places.value = Array.from(new Set(parsed.value.map((item) => item.merName)));
+              select.value = Array.from(new Set(parsed.value.map((item) => item.merName)));
+              parsed.value.forEach((item) => {
+                item.merDate = moment(item.date).format('YYYY-MM');
+                item.merDate = moment(item.date).format('YYYY-MM');
+              });
+              updateCharts();
+            } catch (error) {
+              alert('解析失败，请输入有效的列表！');
+              alert('解析失败，请输入有效的列表！');
+              alert('解析失败，请输入有效的列表！');
+            }
+          };
+
+          const updateCharts = () => {
+            const selectSet = new Set(select.value);
+            const placeMap = {};
+            const monthMap = {};
+            parsed.value.filter((item) => selectSet.has(item.merName)).forEach((item) => {
+              if (!placeMap[item.merName]) placeMap[item.merName] = { totalNumber: 0, totalAmount: 0 };
+              if (!monthMap[item.merDate]) monthMap[item.merDate] = { totalNumber: 0, totalAmount: 0 };
+              placeMap[item.merName].totalNumber += 1;
+              monthMap[item.merDate].totalNumber += 1;
+              placeMap[item.merName].totalAmount -= item.amount / 100;
+              monthMap[item.merDate].totalAmount -= item.amount / 100;
+            });
+            pdata.value = placeMap;
+            mdata.value = monthMap;
+            drawPlaceBarChart();
+            drawPlacePieChart();
+            drawMonthBarChart();
+            drawMonthPieChart();
+          };
+
+          const drawPlaceBarChart = () => {
+            const array = Object.keys(pdata.value).sort().map((category) => ({
+              totalAmount: pdata.value[category].totalAmount,
+              totalNumber: pdata.value[category].totalNumber,
+              category
+            }));
+            pbchart.value.setOption({
+              title: { text: pname.value || 'unknown', x: 'center', y: 'top' },
+              legend: { data: ['总花费', '总次数'], x: 'center', y: 'bottom' },
+              toolbox: {
+                show: true,
+                feature: {
+                  dataView: { show: false },
+                  restore: { show: false },
+                  saveAsImage: { pixelRatio: 2 }
+                }
+              },
+              yAxis: { type: 'category', data: array.map((item) => item.category) },
+              xAxis: [
+                { type: 'value', name: '花费（元）', splitLine: { show: !!1 } },
+                { type: 'value', name: '次数（次）', splitLine: { show: !!0 } }
+              ],
+              series: [
+                {
+                  name: '总花费',
+                  type: 'bar',
+                  xAxisIndex: 0,
+                  label: { show: true, position: 'right', formatter: (param) => param.value.toFixed(1) },
+                  itemStyle: { barBorderRadius: [0, 5, 5, 0] },
+                  data: array.map((item) => item.totalAmount)
+                },
+                {
+                  name: '总次数',
+                  type: 'bar',
+                  xAxisIndex: 1,
+                  label: { show: true, position: 'right', formatter: (param) => param.value.toFixed(1) },
+                  itemStyle: { barBorderRadius: [0, 5, 5, 0] },
+                  data: array.map((item) => item.totalNumber)
+                }
+              ]
+            });
+          };
+
+          const drawMonthBarChart = () => {
+            const array = Object.keys(mdata.value).sort().map((category) => ({
+              totalAmount: mdata.value[category].totalAmount,
+              totalNumber: mdata.value[category].totalNumber,
+              category
+            }));
+            mbchart.value.setOption({
+              title: { text: mname.value || 'unknown', x: 'center', y: 'top' },
+              legend: { data: ['总花费', '总次数'], x: 'center', y: 'bottom' },
+              toolbox: {
+                show: true,
+                feature: {
+                  dataView: { show: false },
+                  restore: { show: false },
+                  saveAsImage: { pixelRatio: 2 }
+                }
+              },
+              xAxis: { type: 'category', data: array.map((item) => item.category) },
+              yAxis: [
+                { type: 'value', name: '花费（元）', splitLine: { show: !!1 } },
+                { type: 'value', name: '次数（次）', splitLine: { show: !!0 } }
+              ],
+              series: [
+                {
+                  name: '总花费',
+                  type: 'bar',
+                  yAxisIndex: 0,
+                  label: { show: true, position: 'top', formatter: (param) => param.value.toFixed(1) },
+                  itemStyle: { barBorderRadius: [5, 5, 0, 0] },
+                  data: array.map((item) => item.totalAmount)
+                },
+                {
+                  name: '总次数',
+                  type: 'bar',
+                  yAxisIndex: 1,
+                  label: { show: true, position: 'top', formatter: (param) => param.value.toFixed(1) },
+                  itemStyle: { barBorderRadius: [5, 5, 0, 0] },
+                  data: array.map((item) => item.totalNumber)
+                }
+              ]
+            });
+          };
+
+          // ------------------------------------------------
+
+          const drawPlacePieChart = () => {
+            // | l-pie | r-pie |
+            const totalAmount = Object.keys(pdata.value).reduce((sum, category) => sum + pdata.value[category].totalAmount, 0);
+            const totalNumber = Object.keys(pdata.value).reduce((sum, category) => sum + pdata.value[category].totalNumber, 0);
+
+            const amountArray = Object.keys(pdata.value).sort().map((category) => ({
+              value: pdata.value[category].totalAmount,
+              name: category,
+              percentage: ((pdata.value[category].totalAmount / totalAmount) * 100).toFixed(1) + '%'
+            }));
+
+            const numberArray = Object.keys(pdata.value).sort().map((category) => ({
+              value: pdata.value[category].totalNumber,
+              name: category,
+              percentage: ((pdata.value[category].totalNumber / totalNumber) * 100).toFixed(1) + '%'
+            }));
+
+            ppchart.value.setOption({
+              title: [
+                {
+                  text: pname.value || 'unknown',
+                  padding: 32,
+                  x: 'center',
+                  y: 'top'
+                },
+                {
+                  text: totalAmount.toFixed(1),
+                  subtext: '元',
+                  x: '30%', // lhs
+                  y: '48%', // lhs
+                  textStyle: { fontSize: 32 },
+                  subtextStyle: { fontSize: 28 },
+                  textVerticalAlign: 'middle',
+                  textAlign: 'center'
+                },
+                {
+                  text: totalNumber.toFixed(1),
+                  subtext: '次',
+                  x: '70%', // rhs
+                  y: '48%', // rhs
+                  textStyle: { fontSize: 32 },
+                  subtextStyle: { fontSize: 28 },
+                  textVerticalAlign: 'middle',
+                  textAlign: 'center'
+                }
+              ],
+              toolbox: {
+                show: true,
+                feature: {
+                  dataView: { show: false },
+                  restore: { show: false },
+                  saveAsImage: { pixelRatio: 2 }
+                }
+              },
+              series: [
+                {
+                  name: '总花费',
+                  type: 'pie',
+                  radius: ['40%', '50%'],
+                  center: ['30%', '50%'],
+                  avoidLabelOverlap: true,
+                  label: { show: true, formatter: (param) => `${param.name}: ${param.value.toFixed(1)} (${param.percent.toFixed(1)}%)` },
+                  itemStyle: { borderWidth: 3, borderColor: 'white' },
+                  data: amountArray,
+                  emphasis: {
+                    label: {
+                      show: true,
+                      fontSize: 20,
+                      fontWeight: 'bold'
+                    }
+                  }
+                },
+                {
+                  name: '总次数',
+                  type: 'pie',
+                  radius: ['40%', '50%'],
+                  center: ['70%', '50%'],
+                  avoidLabelOverlap: true,
+                  label: { show: true, formatter: (param) => `${param.name}: ${param.value.toFixed(1)} (${param.percent.toFixed(1)}%)` },
+                  itemStyle: { borderWidth: 3, borderColor: 'white' },
+                  data: numberArray,
+                  emphasis: {
+                    label: {
+                      show: true,
+                      fontSize: 20,
+                      fontWeight: 'bold'
+                    }
+                  }
+                }
+              ],
+              legend: [
+                {
+                  orient: 'horizontal',
+                  bottom: '9%',
+                  data: Object.keys(pdata.value).sort().slice(amountArray.length & 0, (amountArray.length + 1) >> 1)
+                },
+                {
+                  orient: 'horizontal',
+                  bottom: '4%',
+                  data: Object.keys(pdata.value).sort().slice((numberArray.length + 1) >> 1, numberArray.length | 0)
+                }
+              ]
+            });
+          };
+
+          const drawMonthPieChart = () => {
+            // | l-pie | r-pie |
+            const totalAmount = Object.keys(mdata.value).reduce((sum, category) => sum + mdata.value[category].totalAmount, 0);
+            const totalNumber = Object.keys(mdata.value).reduce((sum, category) => sum + mdata.value[category].totalNumber, 0);
+
+            const amountArray = Object.keys(mdata.value).sort().map((category) => ({
+              value: mdata.value[category].totalAmount,
+              name: category,
+              percentage: ((mdata.value[category].totalAmount / totalAmount) * 100).toFixed(1) + '%'
+            }));
+
+            const numberArray = Object.keys(mdata.value).sort().map((category) => ({
+              value: mdata.value[category].totalNumber,
+              name: category,
+              percentage: ((mdata.value[category].totalNumber / totalNumber) * 100).toFixed(1) + '%'
+            }));
+
+            mpchart.value.setOption({
+              title: [
+                {
+                  text: mname.value || 'unknown',
+                  padding: 32,
+                  x: 'center',
+                  y: 'top'
+                },
+                {
+                  text: totalAmount.toFixed(1),
+                  subtext: '元',
+                  x: '30%', // lhs
+                  y: '48%', // lhs
+                  textStyle: { fontSize: 32 },
+                  subtextStyle: { fontSize: 28 },
+                  textVerticalAlign: 'middle',
+                  textAlign: 'center'
+                },
+                {
+                  text: totalNumber.toFixed(1),
+                  subtext: '次',
+                  x: '70%', // rhs
+                  y: '48%', // rhs
+                  textStyle: { fontSize: 32 },
+                  subtextStyle: { fontSize: 28 },
+                  textVerticalAlign: 'middle',
+                  textAlign: 'center'
+                }
+              ],
+              toolbox: {
+                show: true,
+                feature: {
+                  dataView: { show: false },
+                  restore: { show: false },
+                  saveAsImage: { pixelRatio: 2 }
+                }
+              },
+              series: [
+                {
+                  name: '总花费',
+                  type: 'pie',
+                  radius: ['40%', '50%'],
+                  center: ['30%', '50%'],
+                  avoidLabelOverlap: true,
+                  label: { show: true, formatter: (param) => `${param.name}: ${param.value.toFixed(1)} (${param.percent.toFixed(1)}%)` },
+                  itemStyle: { borderWidth: 3, borderColor: 'white' },
+                  data: amountArray,
+                  emphasis: {
+                    label: {
+                      show: true,
+                      fontSize: 20,
+                      fontWeight: 'bold'
+                    }
+                  }
+                },
+                {
+                  name: '总次数',
+                  type: 'pie',
+                  radius: ['40%', '50%'],
+                  center: ['70%', '50%'],
+                  avoidLabelOverlap: true,
+                  label: { show: true, formatter: (param) => `${param.name}: ${param.value.toFixed(1)} (${param.percent.toFixed(1)}%)` },
+                  itemStyle: { borderWidth: 3, borderColor: 'white' },
+                  data: numberArray,
+                  emphasis: {
+                    label: {
+                      show: true,
+                      fontSize: 20,
+                      fontWeight: 'bold'
+                    }
+                  }
+                }
+              ],
+              legend: [
+                {
+                  orient: 'horizontal',
+                  bottom: '9%',
+                  data: Object.keys(mdata.value).sort().slice(amountArray.length & 0, (amountArray.length + 1) >> 1)
+                },
+                {
+                  orient: 'horizontal',
+                  bottom: '4%',
+                  data: Object.keys(mdata.value).sort().slice((numberArray.length + 1) >> 1, numberArray.length | 0)
+                }
+              ]
+            });
+          };
+
+          return { inputs, pname, mname, places, select, updateCharts, selectCharts, updateInputs, pDefaultName, mDefaultName };
+        }
+      });
+
+      app.use(createVuetify()).mount('#app');
+    </script>
+  </body>
+</html>
