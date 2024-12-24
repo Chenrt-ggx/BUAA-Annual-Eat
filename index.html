@@ -69,6 +69,13 @@
           </v-row>
           <v-row>
             <v-col>
+              <v-text-field v-model="tname" label="时段图表名称" variant="outlined" clearable></v-text-field>
+              <v-btn @click="updateCharts" color="primary" class="mr-2">修改名称</v-btn>
+              <v-btn @click="tDefaultName" color="primary" class="ml-2">恢复默认</v-btn>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
               <div id="pchart-bar" style="width: 100%; height: 600px; margin-top: 10px; margin-bottom: 45px"></div>
               <div v-show="places.length" style="color: red">*如出现元素重叠，请尝试缩放页面；右键保存的图片分辨率较低，下载图片请点击右上角！</div>
             </v-col>
@@ -91,6 +98,18 @@
               <div v-show="places.length" style="color: red">*如出现元素重叠，请尝试缩放页面；右键保存的图片分辨率较低，下载图片请点击右上角！</div>
             </v-col>
           </v-row>
+          <v-row>
+            <v-col>
+              <div id="tchart-bar" style="width: 100%; height: 600px; margin-top: 20px; margin-bottom: 45px"></div>
+              <div v-show="places.length" style="color: red">*如出现元素重叠，请尝试缩放页面；右键保存的图片分辨率较低，下载图片请点击右上角！</div>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <div id="tchart-pie" style="width: 100%; height: 600px; margin-top: -8px; margin-bottom: 20px"></div>
+              <div v-show="places.length" style="color: red">*如出现元素重叠，请尝试缩放页面；右键保存的图片分辨率较低，下载图片请点击右上角！</div>
+            </v-col>
+          </v-row>
         </v-container>
       </v-app>
     </div>
@@ -105,8 +124,10 @@
           const inputs = ref('');
           const pname = ref('百航校园卡各地点总花费及次数');
           const mname = ref('百航校园卡各月份总花费及次数');
+          const tname = ref('百航校园卡各时段总花费及次数');
           const pdata = ref({});
           const mdata = ref({});
+          const tdata = ref({});
 
           const parsed = ref([]);
           const places = ref([]);
@@ -114,8 +135,25 @@
 
           const pbchart = { value: undefined };
           const mbchart = { value: undefined };
+          const tbchart = { value: undefined };
           const ppchart = { value: undefined };
           const mpchart = { value: undefined };
+          const tpchart = { value: undefined };
+
+          const segments = [
+            '23-01时',
+            '01-03时',
+            '03-05时',
+            '05-07时',
+            '07-09时',
+            '09-11时',
+            '11-13时',
+            '13-15时',
+            '15-17时',
+            '17-19时',
+            '19-21时',
+            '21-23时'
+          ];
 
           const selectCharts = () => {
             select.value = places.value; // select all
@@ -132,11 +170,18 @@
             updateCharts();
           };
 
+          const tDefaultName = () => {
+            tname.value = '百航校园卡各时段总花费及次数';
+            updateCharts();
+          };
+
           onMounted(() => {
             pbchart.value = echarts.init(document.getElementById('pchart-bar'));
             mbchart.value = echarts.init(document.getElementById('mchart-bar'));
+            tbchart.value = echarts.init(document.getElementById('tchart-bar'));
             ppchart.value = echarts.init(document.getElementById('pchart-pie'));
             mpchart.value = echarts.init(document.getElementById('mchart-pie'));
+            tpchart.value = echarts.init(document.getElementById('tchart-pie'));
           });
 
           // ------------------------------------------------
@@ -149,12 +194,13 @@
               parsed.value.forEach((item) => {
                 item.merDate = moment(item.date).format('YYYY-MM');
                 item.merDate = moment(item.date).format('YYYY-MM');
+                item.merTime = segments[((new Date(item.date).getHours() + 1) >> 1) % 12];
               });
               updateCharts();
             } catch (error) {
-              alert('解析失败，请输入有效的列表！');
-              alert('解析失败，请输入有效的列表！');
-              alert('解析失败，请输入有效的列表！');
+              0 && alert('解析失败，请输入有效的列表！');
+              0 && alert('解析失败，请输入有效的列表！');
+              1 && alert('解析失败，请输入有效的列表！');
             }
           };
 
@@ -162,20 +208,27 @@
             const selectSet = new Set(select.value);
             const placeMap = {};
             const monthMap = {};
+            const timesMap = {};
             parsed.value.filter((item) => selectSet.has(item.merName)).forEach((item) => {
               if (!placeMap[item.merName]) placeMap[item.merName] = { totalNumber: 0, totalAmount: 0 };
               if (!monthMap[item.merDate]) monthMap[item.merDate] = { totalNumber: 0, totalAmount: 0 };
+              if (!timesMap[item.merTime]) timesMap[item.merTime] = { totalNumber: 0, totalAmount: 0 };
               placeMap[item.merName].totalNumber += 1;
               monthMap[item.merDate].totalNumber += 1;
+              timesMap[item.merTime].totalNumber += 1;
               placeMap[item.merName].totalAmount -= item.amount / 100;
               monthMap[item.merDate].totalAmount -= item.amount / 100;
+              timesMap[item.merTime].totalAmount -= item.amount / 100;
             });
             pdata.value = placeMap;
             mdata.value = monthMap;
+            tdata.value = timesMap;
             drawPlaceBarChart();
             drawPlacePieChart();
             drawMonthBarChart();
             drawMonthPieChart();
+            drawTimesBarChart();
+            drawTimesPieChart();
           };
 
           const drawPlaceBarChart = () => {
@@ -229,6 +282,49 @@
             }));
             mbchart.value.setOption({
               title: { text: mname.value || 'unknown', x: 'center', y: 'top' },
+              legend: { data: ['总花费', '总次数'], x: 'center', y: 'bottom' },
+              toolbox: {
+                show: true,
+                feature: {
+                  dataView: { show: false },
+                  restore: { show: false },
+                  saveAsImage: { pixelRatio: 2 }
+                }
+              },
+              xAxis: { type: 'category', data: array.map((item) => item.category) },
+              yAxis: [
+                { type: 'value', name: '花费（元）', splitLine: { show: !!1 } },
+                { type: 'value', name: '次数（次）', splitLine: { show: !!0 } }
+              ],
+              series: [
+                {
+                  name: '总花费',
+                  type: 'bar',
+                  yAxisIndex: 0,
+                  label: { show: true, position: 'top', formatter: (param) => param.value.toFixed(1) },
+                  itemStyle: { barBorderRadius: [5, 5, 0, 0] },
+                  data: array.map((item) => item.totalAmount)
+                },
+                {
+                  name: '总次数',
+                  type: 'bar',
+                  yAxisIndex: 1,
+                  label: { show: true, position: 'top', formatter: (param) => param.value.toFixed(1) },
+                  itemStyle: { barBorderRadius: [5, 5, 0, 0] },
+                  data: array.map((item) => item.totalNumber)
+                }
+              ]
+            });
+          };
+
+          const drawTimesBarChart = () => {
+            const array = Object.keys(tdata.value).sort().map((category) => ({
+              totalAmount: tdata.value[category].totalAmount,
+              totalNumber: tdata.value[category].totalNumber,
+              category
+            }));
+            tbchart.value.setOption({
+              title: { text: tname.value || 'unknown', x: 'center', y: 'top' },
               legend: { data: ['总花费', '总次数'], x: 'center', y: 'bottom' },
               toolbox: {
                 show: true,
@@ -476,7 +572,125 @@
             });
           };
 
-          return { inputs, pname, mname, places, select, updateCharts, selectCharts, updateInputs, pDefaultName, mDefaultName };
+          const drawTimesPieChart = () => {
+            // | l-pie | r-pie |
+            const totalAmount = Object.keys(tdata.value).reduce((sum, category) => sum + tdata.value[category].totalAmount, 0);
+            const totalNumber = Object.keys(tdata.value).reduce((sum, category) => sum + tdata.value[category].totalNumber, 0);
+
+            const amountArray = Object.keys(tdata.value).sort().map((category) => ({
+              value: tdata.value[category].totalAmount,
+              name: category,
+              percentage: ((tdata.value[category].totalAmount / totalAmount) * 100).toFixed(1) + '%'
+            }));
+
+            const numberArray = Object.keys(tdata.value).sort().map((category) => ({
+              value: tdata.value[category].totalNumber,
+              name: category,
+              percentage: ((tdata.value[category].totalNumber / totalNumber) * 100).toFixed(1) + '%'
+            }));
+
+            tpchart.value.setOption({
+              title: [
+                {
+                  text: tname.value || 'unknown',
+                  padding: 32,
+                  x: 'center',
+                  y: 'top'
+                },
+                {
+                  text: totalAmount.toFixed(1),
+                  subtext: '元',
+                  x: '30%', // lhs
+                  y: '48%', // lhs
+                  textStyle: { fontSize: 32 },
+                  subtextStyle: { fontSize: 28 },
+                  textVerticalAlign: 'middle',
+                  textAlign: 'center'
+                },
+                {
+                  text: totalNumber.toFixed(1),
+                  subtext: '次',
+                  x: '70%', // rhs
+                  y: '48%', // rhs
+                  textStyle: { fontSize: 32 },
+                  subtextStyle: { fontSize: 28 },
+                  textVerticalAlign: 'middle',
+                  textAlign: 'center'
+                }
+              ],
+              toolbox: {
+                show: true,
+                feature: {
+                  dataView: { show: false },
+                  restore: { show: false },
+                  saveAsImage: { pixelRatio: 2 }
+                }
+              },
+              series: [
+                {
+                  name: '总花费',
+                  type: 'pie',
+                  radius: ['40%', '50%'],
+                  center: ['30%', '50%'],
+                  avoidLabelOverlap: true,
+                  label: { show: true, formatter: (param) => `${param.name}: ${param.value.toFixed(1)} (${param.percent.toFixed(1)}%)` },
+                  itemStyle: { borderWidth: 3, borderColor: 'white' },
+                  data: amountArray,
+                  emphasis: {
+                    label: {
+                      show: true,
+                      fontSize: 20,
+                      fontWeight: 'bold'
+                    }
+                  }
+                },
+                {
+                  name: '总次数',
+                  type: 'pie',
+                  radius: ['40%', '50%'],
+                  center: ['70%', '50%'],
+                  avoidLabelOverlap: true,
+                  label: { show: true, formatter: (param) => `${param.name}: ${param.value.toFixed(1)} (${param.percent.toFixed(1)}%)` },
+                  itemStyle: { borderWidth: 3, borderColor: 'white' },
+                  data: numberArray,
+                  emphasis: {
+                    label: {
+                      show: true,
+                      fontSize: 20,
+                      fontWeight: 'bold'
+                    }
+                  }
+                }
+              ],
+              legend: [
+                {
+                  orient: 'horizontal',
+                  bottom: '9%',
+                  data: Object.keys(tdata.value).sort().slice(amountArray.length & 0, (amountArray.length + 1) >> 1)
+                },
+                {
+                  orient: 'horizontal',
+                  bottom: '4%',
+                  data: Object.keys(tdata.value).sort().slice((numberArray.length + 1) >> 1, numberArray.length | 0)
+                }
+              ]
+            });
+          };
+
+          return {
+            places,
+            select,
+            pname,
+            mname,
+            tname,
+            updateCharts,
+            selectCharts,
+            updateInputs,
+            pDefaultName,
+            mDefaultName,
+            tDefaultName,
+            inputs
+          };
         }
       });
 
