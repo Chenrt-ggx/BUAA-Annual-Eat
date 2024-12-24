@@ -48,7 +48,7 @@ Step 6，稍等几秒，控制台中会输出一大段文本，直接点击结�
 
 ![](/step/img-6.jpg)
 
-Step 7，访问[可视化前端](https://chenrt-ggx.github.io/BUAA-Annual-Eat)页面，粘贴上一步复制的内容，点击解析列表即可。在此基础上，你可以隐藏部分消费地点，和自定义图表标题，Have Fun！
+Step 7，访问[可视化前端](https://chenrt-ggx.github.io/BUAA-Annual-Eat)页面，粘贴上一步复制的内容，点击解析列表即可。在此基础上，你可以按需要隐藏部分消费地点，和自定义图表标题，Have Fun！😋😋😋
 
 ![](/step/img-7.jpg)
 
